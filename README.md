@@ -2,12 +2,25 @@
 
 Two automated agents that run every weekday morning and deliver everything you need for standup — before you open a single tab.
 
-Both agents run together at `8:30 AM` and deliver a **single combined Slack post** with everything in one place:
-
 - **Blocker Brief**: queries your Jira sprint board, asks Claude to identify stuck tickets, classifies them by urgency
 - **Thread Summary**: reads your Slack channels, asks Claude to surface decisions, action items, and open questions from the last 18 hours
 
-No manual exports. No context-switching. No laptop required to run them.
+Both run at 8:30 AM and deliver a single combined Slack post. No manual exports. No context-switching. No laptop required.
+
+---
+
+## Getting started
+
+**Not a developer?** Use the setup wizard — it walks you through connecting your tools step by step, no coding required.
+
+👉 **[Download setup.html](https://raw.githubusercontent.com/cdunbar336/standup-prep/main/setup.html)**, save it to your computer, and open it in any web browser. It takes about 10 minutes.
+
+The wizard will:
+- Guide you through creating the credentials you need (Jira, Slack, Anthropic)
+- Generate your GitHub Secrets with copy buttons — no manual formatting
+- Give you the exact schedule line to paste into the config file
+
+**Developer?** Skip ahead to the [manual setup](#setup) section below.
 
 ---
 
