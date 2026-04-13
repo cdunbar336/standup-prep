@@ -2,9 +2,10 @@
 
 Two automated agents that run every weekday morning and deliver everything you need for standup — before you open a single tab.
 
-**Agent 1 — Blocker Brief** (`8:30 AM`): Queries your Jira sprint board, asks Claude to identify stuck tickets, and posts a prioritized blocker brief to Slack.
+Both agents run together at `8:30 AM` and deliver a **single combined Slack post** with everything in one place:
 
-**Agent 2 — Thread Summary** (`8:45 AM`): Reads your Slack channels, asks Claude to surface decisions, action items, and open questions, and posts a digest before the meeting starts.
+- **Blocker Brief**: queries your Jira sprint board, asks Claude to identify stuck tickets, classifies them by urgency
+- **Thread Summary**: reads your Slack channels, asks Claude to surface decisions, action items, and open questions from the last 18 hours
 
 No manual exports. No context-switching. No laptop required to run them.
 
@@ -184,19 +185,20 @@ Before waiting for the schedule, trigger each workflow manually:
 ```bash
 pip install -r requirements.txt
 
-# Agent 1 — Blocker Brief
+# Set all secrets in your shell
 export JIRA_BASE_URL="https://yourorg.atlassian.net"
 export JIRA_EMAIL="you@yourorg.com"
 export JIRA_API_TOKEN="your-jira-token"
-export ANTHROPIC_API_KEY="sk-ant-..."
-export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
-python blocker_brief.py
-
-# Agent 2 — Thread Summary
 export SLACK_BOT_TOKEN="xoxb-..."
 export SLACK_CHANNELS="eng-general,incidents"
 export ANTHROPIC_API_KEY="sk-ant-..."
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+
+# Run the combined agent (recommended)
+python standup_prep.py
+
+# Or run either agent individually
+python blocker_brief.py
 python thread_summary.py
 ```
 
@@ -230,14 +232,18 @@ These agents are intentionally minimal — clean examples of the Fetch → Reaso
 
 ```
 standup-prep/
-├── blocker_brief.py               # Agent 1: Jira → Claude → Slack (8:30 AM)
-├── thread_summary.py              # Agent 2: Slack → Claude → Slack (8:45 AM)
+├── standup_prep.py                # Combined: runs both agents, one Slack post (8:30 AM)
+├── blocker_brief.py               # Agent 1 standalone: Jira → Claude → Slack
+├── thread_summary.py              # Agent 2 standalone: Slack → Claude → Slack
 ├── requirements.txt               # Python dependencies
 └── .github/
     └── workflows/
-        ├── blocker_brief.yml      # Cron schedule for Agent 1
-        └── thread_summary.yml     # Cron schedule for Agent 2
+        ├── standup_prep.yml       # Primary: runs combined script (8:30 AM)
+        ├── blocker_brief.yml      # Optional: run Agent 1 independently
+        └── thread_summary.yml     # Optional: run Agent 2 independently
 ```
+
+`standup_prep.py` is the recommended entry point — it runs both agents and delivers a single Slack post. The individual scripts are available if you only want one agent or want to run them at different times.
 
 ---
 
