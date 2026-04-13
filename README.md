@@ -1,39 +1,55 @@
-# Standup Blocker Brief — AI Agent
+# Standup Prep — AI Agent Suite
 
-An automated agent that queries your Jira sprint board every weekday morning, uses Claude AI to identify stuck or blocked tickets, and delivers a prioritized brief to Slack before standup starts.
+Two automated agents that run every weekday morning and deliver everything you need for standup — before you open a single tab.
 
-**No manual exports. No context-switching. Just a brief waiting for you.**
+**Agent 1 — Blocker Brief** (`8:30 AM`): Queries your Jira sprint board, asks Claude to identify stuck tickets, and posts a prioritized blocker brief to Slack.
+
+**Agent 2 — Thread Summary** (`8:45 AM`): Reads your Slack channels, asks Claude to surface decisions, action items, and open questions, and posts a digest before the meeting starts.
+
+No manual exports. No context-switching. No laptop required to run them.
 
 ---
 
 ## How it works
 
+Both agents follow the same **Fetch → Reason → Deliver** pattern. The data source and output differ; the architecture is identical.
+
 ```
-┌─────────────┐     JQL query      ┌────────────┐     prompt + tickets     ┌────────────────┐
-│  GitHub     │ ─────────────────► │  Jira API  │ ──────────────────────► │  Claude API    │
-│  Actions    │                    │            │                          │  (Anthropic)   │
-│  (cron)     │                    └────────────┘                          └───────┬────────┘
-└─────────────┘                                                                    │
-                                                                         blocker brief
-                                                                                    │
-                                                                           ┌────────▼────────┐
-                                                                           │   Slack webhook  │
-                                                                           └─────────────────┘
+                          ┌──────────────────────────────────────────────┐
+                          │             GitHub Actions (cron)             │
+                          │                                               │
+                          │   8:30 AM → blocker_brief.py                 │
+                          │   8:45 AM → thread_summary.py                │
+                          └──────────┬───────────────────────────────────┘
+                                     │
+                    ┌────────────────┴─────────────────┐
+                    │                                  │
+              FETCH (pull data)                  FETCH (pull data)
+                    │                                  │
+           ┌────────▼────────┐               ┌────────▼────────┐
+           │    Jira API     │               │    Slack API    │
+           │  (JQL query)    │               │ (channel msgs)  │
+           └────────┬────────┘               └────────┬────────┘
+                    │                                  │
+              REASON (analyze)                   REASON (analyze)
+                    │                                  │
+           ┌────────▼──────────────────────────────────▼────────┐
+           │                   Claude API                        │
+           │  blocker detection prompt │ summarization prompt    │
+           └────────┬──────────────────────────────────┬────────┘
+                    │                                  │
+             DELIVER (post)                     DELIVER (post)
+                    │                                  │
+           ┌────────▼──────────────────────────────────▼────────┐
+           │                  Slack webhook                      │
+           └─────────────────────────────────────────────────────┘
 ```
-
-The agent follows a **Fetch → Reason → Deliver** pattern:
-
-| Step | What happens |
-|------|-------------|
-| **Fetch** | Jira REST API is queried with JQL: tickets currently "In Progress" that haven't been updated in 3+ days |
-| **Reason** | Those tickets are passed to Claude with a prompt that assigns it the role of a technical program manager — it classifies each ticket as Blocked, At Risk, or Needs Nudge and suggests a standup question |
-| **Deliver** | Claude's output is formatted with Slack Block Kit and posted to your channel via an incoming webhook |
-
-The script runs on a `cron: '30 8 * * 1-5'` schedule in GitHub Actions. All secrets live in GitHub Secrets — nothing is hardcoded.
 
 ---
 
-## Example Slack output
+## Example output
+
+### Agent 1 — Blocker Brief (8:30 AM)
 
 ```
 📋 Standup Blocker Brief
@@ -42,18 +58,40 @@ The script runs on a `cron: '30 8 * * 1-5'` schedule in GitHub Actions. All secr
 
 🔴 Blocked
 • ENG-412 — Migrate auth middleware to JWT
-  Waiting on security review from @platform team. Last comment 5 days ago asking
-  for sign-off. → Ask: does the platform team have an ETA on the security review?
+  Waiting on security review from @platform team. Last comment 5 days ago.
+  → Ask: does the platform team have an ETA on the security review?
 
 🟡 At Risk
 • ENG-398 — Add pagination to /orders endpoint
-  No comments, no updates. Assigned to someone who is also on ENG-401. → Ask:
-  is this blocked behind ENG-401 or can it move independently?
+  No comments, no updates. Assigned to someone also on ENG-401.
+  → Ask: is this blocked behind ENG-401 or can it move independently?
 
 🟢 Needs Nudge
 • ENG-405 — Update Sentry error grouping rules
 • ENG-389 — Refactor notification service tests
-  Both appear low-priority and simply haven't been touched. Worth a quick status check.
+  Both appear stale but low-priority. Worth a quick status check.
+```
+
+### Agent 2 — Thread Summary (8:45 AM)
+
+```
+📨 Async Thread Summary
+Last 18 hours across #eng-general, #incidents, #releases
+──────────────────────────────────────────────────────────
+
+## #incidents
+**Key decisions:** Agreed to roll back the caching layer change; deploy
+  scheduled for 7 AM.
+**Action items:** @maya to monitor error rates post-rollback and post
+  a status update by 9 AM.
+**Open questions:** Root cause still unclear — was it the TTL change or
+  the new eviction policy?
+
+## #releases
+**FYI:** v2.4.1 shipped cleanly at 11 PM. No issues reported overnight.
+
+## #eng-general
+Low signal — a few async questions, no decisions or action items.
 ```
 
 ---
@@ -62,9 +100,9 @@ The script runs on a `cron: '30 8 * * 1-5'` schedule in GitHub Actions. All secr
 
 ### Prerequisites
 
-- A Jira Cloud account with API access
+- A Jira Cloud account with API access (for Agent 1)
+- A Slack workspace where you can create apps
 - An [Anthropic API key](https://console.anthropic.com)
-- A Slack workspace where you can create an app
 
 ### 1. Fork or clone this repo
 
@@ -73,56 +111,71 @@ git clone https://github.com/cdunbar336/standup-prep.git
 cd standup-prep
 ```
 
-### 2. Create a Slack incoming webhook
+### 2. Create a Slack app for reading messages (Agent 2)
+
+Agent 2 needs to read channel history, which requires a bot token — a webhook URL alone is write-only.
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From scratch**
-2. Under **Features**, select **Incoming Webhooks** and activate it
-3. Click **Add New Webhook to Workspace**, select your standup channel
-4. Copy the webhook URL — you'll need it in the next step
+2. Under **OAuth & Permissions**, add these Bot Token Scopes:
+   - `channels:history` — read messages in public channels
+   - `channels:read` — list channels to resolve names to IDs
+   - `users:read` — look up display names
+3. Click **Install to Workspace** and copy the **Bot User OAuth Token** (`xoxb-...`)
+4. Invite the bot to each channel you want it to monitor: `/invite @your-bot-name`
 
-### 3. Get your Jira API token
+### 3. Create a Slack incoming webhook (both agents)
+
+Both agents post their output via an incoming webhook — simpler than OAuth for writing.
+
+1. In your Slack app (same one or a separate one), go to **Incoming Webhooks** → activate
+2. **Add New Webhook to Workspace** → select your standup channel
+3. Copy the webhook URL
+
+### 4. Get your Jira API token (Agent 1)
 
 1. Go to [id.atlassian.com](https://id.atlassian.com) → **Security** → **Create and manage API tokens**
 2. Create a token and copy it
 
-### 4. Add GitHub Secrets
+### 5. Add GitHub Secrets
 
 In your forked repo: **Settings → Secrets and variables → Actions → New repository secret**
 
-| Secret name | Value |
-|---|---|
-| `JIRA_BASE_URL` | `https://yourorg.atlassian.net` |
-| `JIRA_EMAIL` | Your Atlassian login email |
-| `JIRA_API_TOKEN` | The token from step 3 |
-| `ANTHROPIC_API_KEY` | Your Anthropic API key |
-| `SLACK_WEBHOOK_URL` | The webhook URL from step 2 |
+| Secret | Used by | Value |
+|---|---|---|
+| `JIRA_BASE_URL` | Agent 1 | `https://yourorg.atlassian.net` |
+| `JIRA_EMAIL` | Agent 1 | Your Atlassian login email |
+| `JIRA_API_TOKEN` | Agent 1 | Token from step 4 |
+| `SLACK_BOT_TOKEN` | Agent 2 | `xoxb-...` token from step 2 |
+| `SLACK_CHANNELS` | Agent 2 | Comma-separated channel names, e.g. `eng-general,incidents` |
+| `ANTHROPIC_API_KEY` | Both | Your Anthropic API key |
+| `SLACK_WEBHOOK_URL` | Both | Webhook URL from step 3 |
 
-### 5. Adjust the JQL for your project
+### 6. Adjust Agent 1 for your Jira project
 
-In `blocker_brief.py`, find this line and update `ENG` to your Jira project key:
+In `blocker_brief.py`, update `ENG` to your Jira project key:
 
 ```python
 jql = 'project = ENG AND sprint in openSprints() AND status = "In Progress" AND updated <= -3d'
 ```
 
-### 6. Set your timezone
+### 7. Set your timezone
 
-The workflow runs at `30 8 * * 1-5` (8:30 AM UTC). Update `.github/workflows/blocker_brief.yml` to match your team's timezone:
+Both workflows run in UTC. Update the cron expressions in `.github/workflows/` to match your standup time:
 
-| Timezone | Cron for 8:30 AM |
-|---|---|
-| UTC | `30 8 * * 1-5` |
-| US Eastern (EST) | `30 13 * * 1-5` |
-| US Eastern (EDT) | `30 12 * * 1-5` |
-| US Pacific (PST) | `30 16 * * 1-5` |
-| US Pacific (PDT) | `30 15 * * 1-5` |
+| Timezone | 8:30 AM | 8:45 AM |
+|---|---|---|
+| UTC | `30 8 * * 1-5` | `45 8 * * 1-5` |
+| US Eastern (EST) | `30 13 * * 1-5` | `45 13 * * 1-5` |
+| US Eastern (EDT) | `30 12 * * 1-5` | `45 12 * * 1-5` |
+| US Pacific (PST) | `30 16 * * 1-5` | `45 16 * * 1-5` |
+| US Pacific (PDT) | `30 15 * * 1-5` | `45 15 * * 1-5` |
 
-### 7. Test it manually
+### 8. Test manually
 
-Before waiting for the scheduled run, trigger it manually:
+Before waiting for the schedule, trigger each workflow manually:
 
-1. Go to your repo on GitHub → **Actions** tab
-2. Select **Standup Blocker Brief** → **Run workflow**
+1. Go to your repo → **Actions** tab
+2. Select **Standup Blocker Brief** or **Async Thread Summary** → **Run workflow**
 
 ---
 
@@ -131,44 +184,45 @@ Before waiting for the scheduled run, trigger it manually:
 ```bash
 pip install -r requirements.txt
 
+# Agent 1 — Blocker Brief
 export JIRA_BASE_URL="https://yourorg.atlassian.net"
 export JIRA_EMAIL="you@yourorg.com"
-export JIRA_API_TOKEN="your-token"
+export JIRA_API_TOKEN="your-jira-token"
 export ANTHROPIC_API_KEY="sk-ant-..."
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
-
 python blocker_brief.py
+
+# Agent 2 — Thread Summary
+export SLACK_BOT_TOKEN="xoxb-..."
+export SLACK_CHANNELS="eng-general,incidents"
+export ANTHROPIC_API_KEY="sk-ant-..."
+export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+python thread_summary.py
 ```
 
 ---
 
-## Customizing the prompt
+## Customizing the prompts
 
-The blocker detection logic lives in the `detect_blockers()` function in `blocker_brief.py`. The prompt sent to Claude is easy to modify — you can:
+Each agent's reasoning lives in a single function with a clearly marked prompt:
 
-- Change the urgency categories
-- Ask Claude to tag specific people
-- Request output in a different format (e.g., a numbered list, or grouped by assignee)
-- Add additional context like sprint goals or team capacity
+| Agent | Function | What to change |
+|---|---|---|
+| Blocker Brief | `detect_blockers()` in `blocker_brief.py` | Urgency categories, output format, tone |
+| Thread Summary | `summarize_channels()` in `thread_summary.py` | Lookback window, summary sections, level of detail |
 
-```python
-prompt = f"""You are a technical program manager reviewing the engineering sprint board before standup.
-# ↑ Change the role to match your workflow
-...
-Format your response as a bulleted list grouped by urgency:
-# ↑ Change the format to whatever your team prefers
-```
+Both prompts use role assignment ("You are a TPM / chief of staff...") to anchor Claude's perspective, and explicit format instructions to keep output scannable. Adjust either to match your team's preferences.
 
 ---
 
 ## Extending this pattern
 
-This repo is intentionally minimal — a clean example of the **Fetch → Reason → Deliver** agentic pattern. The same structure can be adapted to:
+These agents are intentionally minimal — clean examples of the Fetch → Reason → Deliver pattern. The same structure can be adapted to:
 
-- Query GitHub instead of Jira (use PyGithub or the GitHub REST API)
-- Deliver to email instead of Slack (use SendGrid or SES)
-- Run on a different trigger (PR merge, Slack slash command, etc.)
-- Add memory by storing previous briefs and asking Claude to identify trends over time
+- **Different sources**: GitHub PRs, Linear tickets, PagerDuty alerts, Google Docs
+- **Different outputs**: email via SendGrid, a shared Notion doc, a dashboard
+- **Different triggers**: a Slack slash command, a PR merge event, an on-call rotation change
+- **Memory**: store previous briefs, ask Claude to identify recurring blockers or trends over time
 
 ---
 
@@ -176,11 +230,13 @@ This repo is intentionally minimal — a clean example of the **Fetch → Reason
 
 ```
 standup-prep/
-├── blocker_brief.py               # Main agent script (fetch → reason → deliver)
+├── blocker_brief.py               # Agent 1: Jira → Claude → Slack (8:30 AM)
+├── thread_summary.py              # Agent 2: Slack → Claude → Slack (8:45 AM)
 ├── requirements.txt               # Python dependencies
 └── .github/
     └── workflows/
-        └── blocker_brief.yml      # GitHub Actions schedule
+        ├── blocker_brief.yml      # Cron schedule for Agent 1
+        └── thread_summary.yml     # Cron schedule for Agent 2
 ```
 
 ---
@@ -188,7 +244,7 @@ standup-prep/
 ## Dependencies
 
 - [`anthropic`](https://pypi.org/project/anthropic/) — Anthropic Python SDK for Claude API
-- [`requests`](https://pypi.org/project/requests/) — HTTP client for Jira and Slack APIs
+- [`requests`](https://pypi.org/project/requests/) — HTTP client for Jira, Slack, and webhook calls
 
 ---
 
