@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standup Prep — Setup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f4;
+      --card: #ffffff;
+      --border: #e5e3de;
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-hover: #4338ca;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #ca8a04;
+      --warning-light: #fefce8;
+      --danger: #dc2626;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .step-dot.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+
+    .step-dot.done {
+      border-color: var(--success);
+      background: var(--success);
+      color: white;
+    }
+
+    .step-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .step-label.active { color: var(--accent); font-weight: 600; }
+    .step-label.done { color: var(--success); }
+
+    .progress-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 18px;
+      transition: background 0.3s;
+    }
+
+    .progress-line.done { background: var(--success); }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .card .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* ── Form elements ── */
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .label-hint {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: white;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    input.error { border-color: var(--danger); }
+    input.valid { border-color: var(--success); }
+
+    .field-error {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error.visible { display: block; }
+
+    /* ── Helper links / callouts ── */
+    .how-to {
+      background: var(--accent-light);
+      border: 1px solid #c7d2fe;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .how-to p {
+      font-size: 13px;
+      color: #3730a3;
+      line-height: 1.6;
+    }
+
+    .how-to strong { font-weight: 600; }
+
+    .how-to a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .how-to a:hover { text-decoration: underline; }
+
+    .how-to ol, .how-to ul {
+      margin-left: 18px;
+      margin-top: 8px;
+    }
+
+    .how-to li { margin-bottom: 4px; }
+
+    .tip {
+      background: var(--warning-light);
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #854d0e;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    /* ── Tag input (channels) ── */
+    .tag-input-wrap {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 44px;
+      cursor: text;
+      transition: border-color 0.15s;
+    }
+
+    .tag-input-wrap:focus-within { border-color: var(--accent); }
+
+    .tag {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 3px 10px 3px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 15px;
+      line-height: 1;
+      padding: 0;
+      opacity: 0.6;
+    }
+
+    .tag button:hover { opacity: 1; }
+
+    .tag-input {
+      border: none;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      flex: 1;
+      min-width: 120px;
+      padding: 2px 4px;
+    }
+
+    /* ── Timezone picker ── */
+    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b6b6b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 32px;
+      gap: 12px;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: #999; color: var(--text); }
+
+    .btn-skip {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ── Secrets checklist (final step) ── */
+    .secret-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .secret-row:last-child { border-bottom: none; }
+
+    .secret-key {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      font-weight: 600;
+      background: #f3f4f6;
+      padding: 3px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: 180px;
+    }
+
+    .secret-value-wrap {
+      flex: 1;
+    }
+
+    .secret-value {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    .secret-value.filled { color: var(--text); }
+    .secret-value.empty { color: #bbb; font-style: italic; }
+
+    .copy-btn {
+      background: var(--accent-light);
+      color: var(--accent);
+      border: none;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .copy-btn:hover { background: #dde4ff; }
+    .copy-btn.copied { background: var(--success-light); color: var(--success); }
+
+    .github-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #24292e;
+      color: white;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 24px;
+    }
+
+    .github-link-btn:hover { background: #1b2126; }
+
+    .step-page { display: none; }
+    .step-page.active { display: block; }
+
+    /* ── Welcome step ── */
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .welcome-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+
+    .welcome-card .wc-icon { font-size: 22px; margin-bottom: 6px; }
+    .welcome-card h3 { font-size: 14px; margin-bottom: 4px; }
+    .welcome-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    .checklist {
+      list-style: none;
+      margin: 16px 0;
+    }
+
+    .checklist li {
+      padding: 6px 0;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    .checklist li::before {
+      content: "○";
+      color: var(--border);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Done banner ── */
+    .done-banner {
+      background: var(--success-light);
+      border: 1px solid #86efac;
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .done-banner .check { font-size: 40px; }
+    .done-banner h2 { font-size: 20px; margin: 12px 0 6px; }
+    .done-banner p { color: var(--success); font-size: 14px; }
+
+    @media (max-width: 520px) {
+      .card { padding: 24px 20px; }
+      .welcome-grid { grid-template-columns: 1fr; }
+      .secret-row { flex-direction: column; }
+      .secret-key { min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Progress bar -->
+  <div class="progress-wrap" id="progress-bar">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 0 — Welcome
+  ══════════════════════════════════════ -->
+  <div class="step-page active" id="step-0">
+    <div class="card">
+      <span class="card-icon">👋</span>
+      <h2>Welcome to Standup Prep</h2>
+      <p class="subtitle">
+        This wizard will connect your tools and get your automated morning brief
+        up and running. It takes about 10 minutes.
+      </p>
+
+      <div class="welcome-grid">
+        <div class="welcome-card">
+          <div class="wc-icon">📋</div>
+          <h3>Blocker Brief</h3>
+          <p>Checks your Jira sprint board and flags stuck tickets before standup.</p>
+        </div>
+        <div class="welcome-card">
+          <div class="wc-icon">📨</div>
+          <h3>Thread Summary</h3>
+          <p>Reads your Slack channels overnight and surfaces decisions and action items.</p>
+        </div>
+      </div>
+
+      <p style="font-size:14px; color:var(--muted); margin-bottom:12px;">Before you start, make sure you have access to:</p>
+      <ul class="checklist">
+        <li>Your Jira workspace (you'll need admin or API access)</li>
+        <li>Your Slack workspace (you'll create a free app)</li>
+        <li>An Anthropic account for the Claude API</li>
+        <li>The GitHub repo you forked this from</li>
+      </ul>
+    </div>
+    <div class="btn-row" style="justify-content:flex-end">
+      <button class="btn-primary" onclick="goTo(1)">Let's get started →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 1 — Jira
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-1">
+    <div class="card">
+      <span class="card-icon">🔵</span>
+      <h2>Connect Jira</h2>
+      <p class="subtitle">
+        We'll use Jira to find tickets that haven't moved in 3+ days.
+        You'll need your workspace URL, login email, and an API token.
+      </p>
+
+      <div class="how-to">
+        <p><strong>How to get your Jira API token:</strong></p>
+        <ol>
+          <li>Go to <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank">id.atlassian.com → Security → API tokens</a></li>
+          <li>Click <strong>Create API token</strong></li>
+          <li>Give it a name like "Standup Prep" and click <strong>Create</strong></li>
+          <li>Copy the token and paste it below — you won't see it again</li>
+        </ol>
+      </div>
+
+      <div class="field">
+        <label>Jira workspace URL <span class="label-hint">— e.g. https://acme.atlassian.net</span></label>
+        <input type="text" id="jira-url" placeholder="https://yourcompany.atlassian.net" oninput="validate('jira-url')" />
+        <div class="field-error" id="jira-url-error">Please enter your full Jira URL including https://</div>
+      </div>
+
+      <div class="field">
+        <label>Jira login email</label>
+        <input type="email" id="jira-email" placeholder="you@yourcompany.com" oninput="validate('jira-email')" />
+        <div class="field-error" id="jira-email-error">Please enter a valid email address</div>
+      </div>
+
+      <div class="field">
+        <label>Jira API token <span class="label-hint">— from the link above</span></label>
+        <input type="password" id="jira-token" placeholder="Paste your API token here" oninput="validate('jira-token')" />
+        <div class="field-error" id="jira-token-error">Please enter your API token</div>
+      </div>
+
+      <div class="field">
+        <label>Jira project key <span class="label-hint">— the letters before your ticket numbers, e.g. ENG in ENG-412</span></label>
+        <input type="text" id="jira-project" placeholder="ENG" oninput="this.value = this.value.toUpperCase()" />
+        <div class="field-error" id="jira-project-error">Please enter your project key</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(0)">← Back</button>
+      <button class="btn-primary" onclick="nextFrom(1)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 2 — Slack (read)
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-2">
+    <div class="card">
+      <span class="card-icon">💬</span>
+      <h2>Connect Slack — Reading messages</h2>
+      <p class="subtitle">
+        To read channel history, you need to create a small Slack app in your workspace.
+        It takes about 3 minutes and you don't need to be a Slack admin.
+      </p>
+
+      <div class="how-to">
+        <p><strong>Create your Slack app and get a bot token:</strong></p>
+        <ol>
+          <li>Go to <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> and click <strong>Create New App → From scratch</strong></li>
+          <li>Name it "Standup Prep" and choose your workspace</li>
+          <li>In the left sidebar, click <strong>OAuth & Permissions</strong></li>
+          <li>Under <strong>Bot Token Scopes</strong>, add these three:
+            <ul style="margin-top:6px">
+              <li><code style="background:#e0e7ff;padding:1px 5px;border-radius:4px">channels:history</code> — read messages</li>
+              <li><code style="background:#e0e7ff;padding:1px 5px;border-radius:4px">channels:read</code> — list channels</li>
+              <li><code style="background:#e0e7ff;padding:1px 5px;border-radius:4px">users:read</code> — show names</li>
+            </ul>
+          </li>
+          <li>Scroll up and click <strong>Install to Workspace</strong>, then <strong>Allow</strong></li>
+          <li>Copy the <strong>Bot User OAuth Token</strong> (starts with <code style="background:#e0e7ff;padding:1px 5px;border-radius:4px">xoxb-</code>)</li>
+        </ol>
+      </div>
+
+      <div class="field">
+        <label>Slack bot token <span class="label-hint">— starts with xoxb-</span></label>
+        <input type="password" id="slack-bot-token" placeholder="xoxb-..." oninput="validate('slack-bot-token')" />
+        <div class="field-error" id="slack-bot-token-error">Bot token should start with xoxb-</div>
+      </div>
+
+      <div class="field">
+        <label>Channels to monitor <span class="label-hint">— type a channel name and press Enter</span></label>
+        <div class="tag-input-wrap" onclick="document.getElementById('channel-input').focus()">
+          <div id="channel-tags"></div>
+          <input class="tag-input" id="channel-input" placeholder="#eng-general" onkeydown="handleChannelInput(event)" />
+        </div>
+        <div class="field-error" id="channel-error">Add at least one channel to monitor</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">
+          Type a channel name (without #) and press <strong>Enter</strong> or <strong>comma</strong> to add it.
+          Then run <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">/invite @Standup Prep</code> in each channel so the bot can read it.
+        </p>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(1)">← Back</button>
+      <button class="btn-primary" onclick="nextFrom(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 3 — Slack (post)
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-3">
+    <div class="card">
+      <span class="card-icon">📣</span>
+      <h2>Connect Slack — Posting the brief</h2>
+      <p class="subtitle">
+        The morning brief gets posted to a Slack channel via a webhook.
+        Choose which channel you want it delivered to (usually your standup channel).
+      </p>
+
+      <div class="how-to">
+        <p><strong>Add a webhook to your Slack app:</strong></p>
+        <ol>
+          <li>Go back to your app at <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> and select <strong>Standup Prep</strong></li>
+          <li>In the left sidebar, click <strong>Incoming Webhooks</strong></li>
+          <li>Toggle <strong>Activate Incoming Webhooks</strong> on</li>
+          <li>Click <strong>Add New Webhook to Workspace</strong></li>
+          <li>Choose the channel where you want the brief to appear</li>
+          <li>Click <strong>Allow</strong>, then copy the <strong>Webhook URL</strong></li>
+        </ol>
+      </div>
+
+      <div class="field">
+        <label>Slack webhook URL <span class="label-hint">— starts with https://hooks.slack.com/</span></label>
+        <input type="text" id="slack-webhook" placeholder="https://hooks.slack.com/services/..." oninput="validate('slack-webhook')" />
+        <div class="field-error" id="slack-webhook-error">Webhook URL should start with https://hooks.slack.com/</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(2)">← Back</button>
+      <button class="btn-primary" onclick="nextFrom(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 4 — Anthropic
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-4">
+    <div class="card">
+      <span class="card-icon">🤖</span>
+      <h2>Connect Claude AI</h2>
+      <p class="subtitle">
+        Claude does the reasoning — reading the Jira tickets and Slack messages
+        and turning them into an actionable brief. You'll need an API key from Anthropic.
+      </p>
+
+      <div class="how-to">
+        <p><strong>Get your Anthropic API key:</strong></p>
+        <ol>
+          <li>Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> and sign in (or create a free account)</li>
+          <li>Click <strong>API Keys</strong> in the left sidebar</li>
+          <li>Click <strong>Create Key</strong>, name it "Standup Prep", and copy it</li>
+        </ol>
+      </div>
+
+      <div class="tip">
+        💡 The API costs a few cents per run. For a daily brief, typical usage is well under $1/month.
+      </div>
+
+      <div class="field">
+        <label>Anthropic API key <span class="label-hint">— starts with sk-ant-</span></label>
+        <input type="password" id="anthropic-key" placeholder="sk-ant-..." oninput="validate('anthropic-key')" />
+        <div class="field-error" id="anthropic-key-error">API key should start with sk-ant-</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(3)">← Back</button>
+      <button class="btn-primary" onclick="nextFrom(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 5 — Preferences
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-5">
+    <div class="card">
+      <span class="card-icon">⚙️</span>
+      <h2>Preferences</h2>
+      <p class="subtitle">
+        Almost done. Just tell us what time you want the brief delivered
+        and what timezone your team is in.
+      </p>
+
+      <div class="field">
+        <label>Delivery time <span class="label-hint">— when should the brief arrive before standup?</span></label>
+        <select id="delivery-time">
+          <option value="7:30">7:30 AM</option>
+          <option value="8:00">8:00 AM</option>
+          <option value="8:15">8:15 AM</option>
+          <option value="8:30" selected>8:30 AM</option>
+          <option value="8:45">8:45 AM</option>
+          <option value="9:00">9:00 AM</option>
+          <option value="9:15">9:15 AM</option>
+          <option value="9:30">9:30 AM</option>
+          <option value="10:00">10:00 AM</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Your timezone</label>
+        <select id="timezone">
+          <option value="UTC+0">UTC (London, winter)</option>
+          <option value="UTC+1">UTC+1 (London, summer / Paris, winter)</option>
+          <option value="UTC+2">UTC+2 (Paris, summer / Eastern Europe)</option>
+          <option value="UTC-5" selected>US Eastern (EST, UTC-5)</option>
+          <option value="UTC-4">US Eastern Daylight (EDT, UTC-4)</option>
+          <option value="UTC-6">US Central (CST, UTC-6)</option>
+          <option value="UTC-5-CDT">US Central Daylight (CDT, UTC-5)</option>
+          <option value="UTC-7">US Mountain (MST, UTC-7)</option>
+          <option value="UTC-6-MDT">US Mountain Daylight (MDT, UTC-6)</option>
+          <option value="UTC-8">US Pacific (PST, UTC-8)</option>
+          <option value="UTC-7-PDT">US Pacific Daylight (PDT, UTC-7)</option>
+          <option value="UTC+5.5">India (IST, UTC+5:30)</option>
+          <option value="UTC+8">China / Singapore (UTC+8)</option>
+          <option value="UTC+9">Japan / Korea (UTC+9)</option>
+          <option value="UTC+10">Australia Eastern (AEST, UTC+10)</option>
+          <option value="UTC+11">Australia Eastern Daylight (AEDT, UTC+11)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Days to run</label>
+        <select id="run-days">
+          <option value="1-5" selected>Monday – Friday (weekdays)</option>
+          <option value="1-6">Monday – Saturday</option>
+          <option value="*">Every day</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goTo(4)">← Back</button>
+      <button class="btn-primary" onclick="nextFrom(5)">Generate my setup →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Step 6 — Final: GitHub Secrets
+  ══════════════════════════════════════ -->
+  <div class="step-page" id="step-6">
+    <div class="done-banner">
+      <div class="check">✅</div>
+      <h2>You're almost there!</h2>
+      <p>Copy each value below into your GitHub repository secrets.</p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:6px">Add these to GitHub Secrets</h2>
+      <p class="subtitle" style="margin-bottom:20px">
+        In your GitHub repo, go to <strong>Settings → Secrets and variables → Actions</strong>
+        and click <strong>New repository secret</strong> for each one below.
+      </p>
+
+      <a id="github-secrets-link" href="https://github.com" target="_blank" class="github-link-btn" style="margin-bottom:28px;display:inline-flex">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 6.1 18 6.4 18 6.4c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+        Open GitHub Secrets →
+      </a>
+
+      <div id="secrets-list">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-bottom:8px">Last step — update the workflow file</h2>
+      <p class="subtitle" style="margin-bottom:16px">
+        Open <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">.github/workflows/standup_prep.yml</code>
+        in your repo and replace the cron line with this:
+      </p>
+      <div style="display:flex;align-items:center;gap:10px">
+        <code id="cron-output" style="background:#f3f4f6;padding:10px 14px;border-radius:8px;font-size:13px;flex:1;word-break:break-all"></code>
+        <button class="copy-btn" onclick="copyText('cron-output', this)">Copy</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px" id="cron-explanation"></p>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-bottom:8px">Test it before the schedule kicks in</h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6">
+        Go to your repo → <strong>Actions</strong> tab → select <strong>Morning Standup Brief</strong>
+        → click <strong>Run workflow</strong>. It'll run immediately and post to your Slack channel.
+      </p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // ── State ──
+  const state = {
+    jiraUrl: '', jiraEmail: '', jiraToken: '', jiraProject: 'ENG',
+    slackBotToken: '', slackChannels: [],
+    slackWebhook: '',
+    anthropicKey: '',
+    deliveryTime: '8:30', timezone: 'UTC-5', runDays: '1-5',
+  };
+
+  const channels = [];
+
+  const STEPS = [
+    { label: 'Welcome' },
+    { label: 'Jira' },
+    { label: 'Slack (read)' },
+    { label: 'Slack (post)' },
+    { label: 'Claude AI' },
+    { label: 'Preferences' },
+    { label: 'GitHub' },
+  ];
+
+  let currentStep = 0;
+
+  // ── Progress bar ──
+  function renderProgress() {
+    const bar = document.getElementById('progress-bar');
+    bar.innerHTML = '';
+    STEPS.forEach((s, i) => {
+      if (i > 0) {
+        const line = document.createElement('div');
+        line.className = 'progress-line' + (i <= currentStep ? ' done' : '');
+        bar.appendChild(line);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'progress-step';
+      const dot = document.createElement('div');
+      dot.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+      dot.textContent = i < currentStep ? '✓' : (i + 1);
+      const label = document.createElement('div');
+      label.className = 'step-label' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+      label.textContent = s.label;
+      wrap.appendChild(dot);
+      wrap.appendChild(label);
+      bar.appendChild(wrap);
+    });
+  }
+
+  // ── Navigation ──
+  function goTo(n) {
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    currentStep = n;
+    document.getElementById('step-' + n).classList.add('active');
+    renderProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (n === 6) buildFinalStep();
+  }
+
+  function nextFrom(step) {
+    if (!validateStep(step)) return;
+    saveStep(step);
+    goTo(step + 1);
+  }
+
+  // ── Validation ──
+  function validate(id) {
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(id + '-error');
+    let ok = true;
+
+    if (id === 'jira-url') {
+      ok = el.value.startsWith('https://') && el.value.includes('atlassian');
+    } else if (id === 'jira-email') {
+      ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value);
+    } else if (id === 'jira-token') {
+      ok = el.value.length > 10;
+    } else if (id === 'slack-bot-token') {
+      ok = el.value.startsWith('xoxb-');
+    } else if (id === 'slack-webhook') {
+      ok = el.value.startsWith('https://hooks.slack.com/');
+    } else if (id === 'anthropic-key') {
+      ok = el.value.startsWith('sk-ant-');
+    }
+
+    if (errEl) errEl.classList.toggle('visible', !ok && el.value.length > 0);
+    el.classList.toggle('error', !ok && el.value.length > 0);
+    el.classList.toggle('valid', ok && el.value.length > 0);
+    return ok;
+  }
+
+  function validateStep(step) {
+    if (step === 1) {
+      const a = validate('jira-url');
+      const b = validate('jira-email');
+      const c = validate('jira-token');
+      const proj = document.getElementById('jira-project').value.trim();
+      if (!proj) {
+        document.getElementById('jira-project-error').classList.add('visible');
+        document.getElementById('jira-project').classList.add('error');
+      }
+      return a && b && c && proj;
+    }
+    if (step === 2) {
+      const a = validate('slack-bot-token');
+      const hasChannels = channels.length > 0;
+      document.getElementById('channel-error').classList.toggle('visible', !hasChannels);
+      return a && hasChannels;
+    }
+    if (step === 3) return validate('slack-webhook');
+    if (step === 4) return validate('anthropic-key');
+    return true;
+  }
+
+  function saveStep(step) {
+    if (step === 1) {
+      state.jiraUrl     = document.getElementById('jira-url').value.trim().replace(/\/$/, '');
+      state.jiraEmail   = document.getElementById('jira-email').value.trim();
+      state.jiraToken   = document.getElementById('jira-token').value.trim();
+      state.jiraProject = document.getElementById('jira-project').value.trim().toUpperCase() || 'ENG';
+    }
+    if (step === 2) {
+      state.slackBotToken = document.getElementById('slack-bot-token').value.trim();
+      state.slackChannels = [...channels];
+    }
+    if (step === 3) {
+      state.slackWebhook = document.getElementById('slack-webhook').value.trim();
+    }
+    if (step === 4) {
+      state.anthropicKey = document.getElementById('anthropic-key').value.trim();
+    }
+    if (step === 5) {
+      state.deliveryTime = document.getElementById('delivery-time').value;
+      state.timezone     = document.getElementById('timezone').value;
+      state.runDays      = document.getElementById('run-days').value;
+    }
+  }
+
+  // ── Channel tag input ──
+  function handleChannelInput(e) {
+    const input = document.getElementById('channel-input');
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/^#/, '').replace(/,$/, '');
+      if (val && !channels.includes(val)) {
+        channels.push(val);
+        renderTags();
+      }
+      input.value = '';
+    } else if (e.key === 'Backspace' && input.value === '' && channels.length > 0) {
+      channels.pop();
+      renderTags();
+    }
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById('channel-tags');
+    wrap.innerHTML = '';
+    channels.forEach((c, i) => {
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.innerHTML = `#${c} <button onclick="removeChannel(${i})">×</button>`;
+      wrap.appendChild(tag);
+    });
+  }
+
+  function removeChannel(i) {
+    channels.splice(i, 1);
+    renderTags();
+  }
+
+  // ── Final step: build secrets list + cron ──
+  function buildFinalStep() {
+    // Update GitHub secrets link
+    const repoUrl = 'https://github.com/cdunbar336/standup-prep/settings/secrets/actions';
+    document.getElementById('github-secrets-link').href = repoUrl;
+
+    // Patch JQL if project key changed
+    const jqlNote = state.jiraProject !== 'ENG'
+      ? ` (Also update the project key in <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">blocker_brief.py</code> to <strong>${state.jiraProject}</strong>.)`
+      : '';
+
+    const secrets = [
+      { key: 'JIRA_BASE_URL',    value: state.jiraUrl,       note: '' },
+      { key: 'JIRA_EMAIL',       value: state.jiraEmail,     note: '' },
+      { key: 'JIRA_API_TOKEN',   value: state.jiraToken,     note: '', sensitive: true },
+      { key: 'SLACK_BOT_TOKEN',  value: state.slackBotToken, note: '', sensitive: true },
+      { key: 'SLACK_CHANNELS',   value: state.slackChannels.join(','), note: '' },
+      { key: 'ANTHROPIC_API_KEY',value: state.anthropicKey,  note: '', sensitive: true },
+      { key: 'SLACK_WEBHOOK_URL',value: state.slackWebhook,  note: '', sensitive: true },
+    ];
+
+    const list = document.getElementById('secrets-list');
+    list.innerHTML = '';
+    secrets.forEach(s => {
+      const displayVal = s.sensitive && s.value ? '••••••••••••' + s.value.slice(-4) : (s.value || '—');
+      const isFilled = !!s.value;
+      const row = document.createElement('div');
+      row.className = 'secret-row';
+      row.innerHTML = `
+        <div class="secret-key">${s.key}</div>
+        <div class="secret-value-wrap">
+          <div class="secret-value ${isFilled ? 'filled' : 'empty'}" id="sv-${s.key}">${displayVal}</div>
+        </div>
+        ${isFilled ? `<button class="copy-btn" onclick="copySecret('${s.key}', '${encodeURIComponent(s.value)}', this)">Copy</button>` : ''}
+      `;
+      list.appendChild(row);
+    });
+
+    // Cron expression
+    const cron = buildCron(state.deliveryTime, state.timezone, state.runDays);
+    document.getElementById('cron-output').textContent = `cron: '${cron}'`;
+    document.getElementById('cron-explanation').innerHTML =
+      `This delivers the brief at <strong>${state.deliveryTime}</strong> in your timezone, Monday–Friday.` + jqlNote;
+  }
+
+  function buildCron(timeStr, tz, days) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const offsets = {
+      'UTC+0': 0, 'UTC+1': -1, 'UTC+2': -2,
+      'UTC-4': 4, 'UTC-5': 5, 'UTC-5-CDT': 5,
+      'UTC-6': 6, 'UTC-6-MDT': 6, 'UTC-7': 7, 'UTC-7-PDT': 7, 'UTC-8': 8,
+      'UTC+5.5': -5, 'UTC+8': -8, 'UTC+9': -9, 'UTC+10': -10, 'UTC+11': -11,
+    };
+    const offset = offsets[tz] ?? 0;
+    let utcH = (h + offset + 24) % 24;
+    return `${m} ${utcH} * * ${days}`;
+  }
+
+  function copySecret(key, encodedVal, btn) {
+    navigator.clipboard.writeText(decodeURIComponent(encodedVal)).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function copyText(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // ── Init ──
+  renderProgress();
+</script>
+</body>
+</html>
